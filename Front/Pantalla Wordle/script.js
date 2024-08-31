@@ -11,7 +11,7 @@ let mensajeFinal = '';
 let listaPalabras = [];
 
 
-fetch('palabras.txt')
+fetch('palabras2.txt')
     .then(response => response.text())
     .then(data => {
         listaPalabras = data.split('\n').map(palabra => palabra.trim().toUpperCase());
