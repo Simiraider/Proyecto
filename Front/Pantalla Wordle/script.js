@@ -1,6 +1,5 @@
-
 const filas = document.querySelectorAll('.row');
-let finalDiv = document.getElementById("final"); // cambiado de var a let
+var finalDiv = document.getElementById("final");
 let filaActual = 0;
 let letraActual = 0;
 
@@ -10,31 +9,14 @@ let mensajeFinal = '';
 
 let listaPalabras = [];
 
-fetch('palabras.txt')
-    .then(response => response.text())    
+fetch('palabras.txt') // Extra un valor de palabras.txt
+    .then(response => response.text())
     .then(data => {
         listaPalabras = data.split('\n').map(palabra => palabra.trim().toUpperCase());
-        palabraCorrecta = listaPalabras[Math.floor(Math.random() * listaPalabras.length)];
-        console.log(`Palabra correcta: ${palabraCorrecta}`);    
-    })    
-    .catch(err => console.log('Se produjo un error', err));
-
- /* function buscarCaracteresDuplicados(str) {
-    var result = [];
-    var count = 0;
-
-    for (var i = 0; i < str.length; i++) {        
-        for (var j = i + 1; j < str.length; j++) {
-            console.log(`i: "${str[i]}"`);
-            console.log(`j: "${str[j]}"`);
-            if (str[i] === str[j]) {
-                result.push(str[i]);
-            }
-        }
-    }
-
-    return result;
-}  */
+        palabraCorrecta = listaPalabras[Math.floor(Math.random() * listaPalabras.length)]; // Lo hace de manera random
+        console.log(`Palabra correcta: ${palabraCorrecta}`); // console.log para deicr la palabra correcta, solo de manera para controlar errores en codigo
+    });
+    
 
 const confirmarPalabra = () => {
     if (letraActual != 5) return;
@@ -42,36 +24,51 @@ const confirmarPalabra = () => {
     const letras = filas[filaActual].querySelectorAll('.letra');
     let palabraIngresada = Array.from(letras).map(letter => letter.textContent).join('');
 
-    if (!listaPalabras.includes(palabraIngresada)) {      
-        mensajeFinal = 'La palabra ingresada no existe en el diccionario.'; // en lugar del alert
-        finalDiv.innerHTML = mensajeFinal;
+    if (!listaPalabras.includes(palabraIngresada)) {
+        mensajeFinal = `Palabra no valida`;
+    finalDiv.innerHTML = mensajeFinal;
         return;
     }
 
-    let sum = 0;    
+    let palabraCorrectaTemp = palabraCorrecta.split('');
+    let sum = 0;
 
-    // let duplicados = buscarCaracteresDuplicados(palabraCorrecta);
-    // console.log(duplicados);
-
+    // Primero manejamos los casos en los que las letras están en la posición correcta
     letras.forEach((letter, index) => {
-        console.log(letter);
-        letter.classList.add('checked');        
         const tecla = document.querySelector(`.key[data-key="${letter.textContent.toLowerCase()}"]`);
-        if (letter.textContent === palabraCorrecta[index]) { // si la letra actual, está en la palabra buscada y en la posición correcta, se pinta de verde
+
+        if (letter.textContent === palabraCorrecta[index]) {
             letter.style.backgroundColor = 'green';
             if (tecla) tecla.style.backgroundColor = 'green';
             sum++;
-        } else if (palabraCorrecta.includes(letter.textContent)) { // si la letra actual, está en la palabr buscada pero no es la posición correcta, se pinta de amarillo
-            // si la letra está más de una vez
-            /* if (palabraCorrecta.indexOf(letter.textContent) !== palabraCorrecta.lastIndexOf(letter.textContent)) {                
-            }; */
-            letter.style.backgroundColor = 'yellow';
-            if (tecla && tecla.style.backgroundColor !== 'green') {
-                tecla.style.backgroundColor = 'yellow';
+            palabraCorrectaTemp[index] = null; // Remover la letra correcta para evitar duplicados
+        }
+    });
+    botonBorrar.addEventListener('click', () => {
+        finalDiv.innerHTML = '';  // Limpia el contenido del mensaje
+    });
+    
+    // Evento para detectar cuando se presiona una tecla
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Backspace' || event.key === 'Delete') {
+            finalDiv.innerHTML = '';  // Limpia el contenido del mensaje
+        }
+    });
+    // Luego manejamos las letras que están en la palabra pero en otra posición
+    letras.forEach((letter, index) => {
+        if (letter.style.backgroundColor !== 'green') { // Solo comprobar letras que no están en la posición correcta
+            const tecla = document.querySelector(`.key[data-key="${letter.textContent.toLowerCase()}"]`);
+            let pos = palabraCorrectaTemp.indexOf(letter.textContent);
+            if (pos !== -1) {
+                letter.style.backgroundColor = 'yellow';
+                if (tecla && tecla.style.backgroundColor !== 'green') {
+                    tecla.style.backgroundColor = 'yellow';
+                }
+                palabraCorrectaTemp[pos] = null; // Remover la letra para evitar duplicados
+            } else {
+                letter.style.backgroundColor = 'gray';
+                if (tecla) tecla.style.backgroundColor = 'gray';
             }
-        } else {
-            letter.style.backgroundColor = 'gray';
-            if (tecla) tecla.style.backgroundColor = 'gray';
         }
     });
 
@@ -97,8 +94,6 @@ document.addEventListener('keydown', e => {
     } else if (e.key === 'Backspace' && letraActual > 0) {
         letraActual--;
         letras[letraActual].textContent = '';
-        mensajeFinal = '';
-        finalDiv.innerHTML = mensajeFinal;
     } else if (e.key.match(/^[a-zñ]$/i) && letraActual < 5) {
         letras[letraActual].textContent = e.key.toUpperCase();
         letraActual++;
@@ -123,6 +118,7 @@ teclas.forEach(tecla => {
         }
     });
 });
+
 const botonEnter = document.getElementById('enviar');
 botonEnter.addEventListener("click", function() {
     confirmarPalabra();
@@ -136,10 +132,3 @@ botonBorrar.addEventListener("click", function() {
         letras[letraActual].textContent = '';
     }    
 });
-
-/*
-const botonReset = document.getElementById('reset');
-botonReset.addEventListener("click", function() {
-    location.reload();
-});
-*/
